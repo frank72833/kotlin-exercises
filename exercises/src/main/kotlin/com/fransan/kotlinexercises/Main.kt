@@ -1,3 +1,5 @@
+package com.fransan.kotlinexercises
+
 fun main(args: Array<String>) {
     println("Hello World!")
 
