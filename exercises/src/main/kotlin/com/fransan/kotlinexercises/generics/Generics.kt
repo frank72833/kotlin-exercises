@@ -17,7 +17,6 @@ fun main() {
     // functionA(null) // Does not compile
     println("##########")
 
-
     println(functionB<BigDecimal>("ad"))
 
     println("##########")
