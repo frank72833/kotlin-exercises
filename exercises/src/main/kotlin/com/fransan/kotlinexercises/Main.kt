@@ -1,5 +1,13 @@
 package com.fransan.kotlinexercises
 
+import java.time.Duration
+import java.time.Instant
+
+private val zeroTime = Instant.now()
+
+fun log(message: Any?) =
+    println("${Duration.between(zeroTime, Instant.now()).toMillis()}ms " + "[${Thread.currentThread().name}] $message")
+
 fun main(args: Array<String>) {
     println("Hello World!")
 
