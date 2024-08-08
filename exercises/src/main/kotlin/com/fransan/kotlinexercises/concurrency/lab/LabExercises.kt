@@ -1,69 +1,73 @@
 package com.fransan.kotlinexercises.concurrency.lab
 
-import kotlinx.coroutines.CoroutineScope
+import com.fransan.kotlinexercises.log
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-enum class Product(
+enum class Task(
     val description: String,
-    val deliveryTime: Long,
+    val waitingTime: Long?,
+    val runningTime: Long?,
 ) {
-    DOORS("doors", 750L),
-    WINDOWS("windows", 1_500L)
+    ORDER_DOORS("order doors", 750L, null),
+    ORDER_WINDOWS("order windows", 1_500L, null),
+    INSTALL_DOORS("install doors", null, 1_000L),
+    INSTALL_WINDOWS("install windows", null, 1_000L),
+    INSTALL_BRICKS("install bricks", null, 1_000L),
 }
 
-suspend fun order(products: Product): Product {
-    println("Ordering: ${products.description}")
-    delay(products.deliveryTime)
-    println("Order delivered: ${products.description}")
-    return products
+suspend fun executeTask(task: Task): Task {
+    log("Executing task start: ${task.description}")
+    task.waitingTime?.let { delay(it) }
+    task.runningTime?.let { Thread.sleep(it) }
+    log("Executing task end: ${task.description}")
+    return task
 }
 
-fun perform(taskName: String): String {
-    println("Working on: $taskName")
-    Thread.sleep(1_000) // Cannot be suspended
-    println("Completed: $taskName")
-    return taskName
-}
-
-fun installWindows(scope: CoroutineScope) {
-    val order = scope.async(Dispatchers.IO) {
-        order(Product.WINDOWS)
+suspend fun installWindows() = coroutineScope {
+    coroutineScope {
+        launch(Dispatchers.IO) {
+            executeTask(Task.ORDER_WINDOWS)
+        }
     }
 
-    scope.launch(Dispatchers.Default) {
-        order.await() // Wait for order to be completed
-        perform("Installing windows")
-    }
-}
-
-fun installDoors(scope: CoroutineScope) {
-    val order = scope.async(Dispatchers.IO) {
-        order(Product.DOORS)
-    }
-
-    scope.launch(Dispatchers.Default) {
-        order.await() // Wait for order to be completed
-        perform("Installing doors")
+    coroutineScope {
+        launch {
+            executeTask(Task.INSTALL_WINDOWS)
+        }
     }
 }
 
-fun layingBricks(scope: CoroutineScope) =
-    scope.launch(Dispatchers.Default) {
-        perform("laying bricks")
+suspend fun installDoors() = coroutineScope {
+    coroutineScope {
+        launch(Dispatchers.IO) {
+            executeTask(Task.ORDER_DOORS)
+        }
     }
+
+    coroutineScope {
+        launch {
+            executeTask(Task.INSTALL_DOORS)
+        }
+    }
+}
+
+suspend fun layingBricks() = coroutineScope {
+    launch {
+        executeTask(Task.INSTALL_BRICKS)
+    }
+}
 
 fun main(): Unit = runBlocking {
     val start = System.currentTimeMillis()
 
     coroutineScope {
-        installWindows(this)
-        installDoors(this)
-        layingBricks(this)
+        launch(Dispatchers.Default) { installWindows() }
+        launch(Dispatchers.Default) { installDoors() }
+        launch(Dispatchers.Default) { layingBricks() }
     }
 
     println("Total duration: ${System.currentTimeMillis() - start}ms")
