@@ -27,7 +27,7 @@ suspend fun executeTask(task: Task): Task {
     return task
 }
 
-suspend fun installWindows() = coroutineScope {
+suspend fun installWindows() {
     coroutineScope {
         launch(Dispatchers.IO) {
             executeTask(Task.ORDER_WINDOWS)
@@ -41,7 +41,7 @@ suspend fun installWindows() = coroutineScope {
     }
 }
 
-suspend fun installDoors() = coroutineScope {
+suspend fun installDoors() {
     coroutineScope {
         launch(Dispatchers.IO) {
             executeTask(Task.ORDER_DOORS)
@@ -70,5 +70,5 @@ fun main(): Unit = runBlocking {
         launch(Dispatchers.Default) { layingBricks() }
     }
 
-    println("Total duration: ${System.currentTimeMillis() - start}ms")
+    println("Total duration: ${System.currentTimeMillis() - start} ms")
 }
